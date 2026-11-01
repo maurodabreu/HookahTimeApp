@@ -17,7 +17,8 @@ import {
   Trash2,
   Edit2,
   KeyRound,
-  UserCheck
+  UserCheck,
+  UserPlus
 } from 'lucide-react';
 
 // Default Venues Setup
@@ -345,7 +346,7 @@ export default function App() {
               <h1 className="text-lg font-black tracking-wider text-white flex items-center">
                 HOOKAH<span className="text-purple-400">TIME!</span>
               </h1>
-              <p className="text-[10px] text-purple-300/60 uppercase font-mono tracking-widest">Management Platform</p>
+              <p className="text-[10px] text-purple-300/60 uppercase font-mono tracking-widest">Enterprise Suite</p>
             </div>
           </div>
 
@@ -844,7 +845,7 @@ export default function App() {
                     <div className="text-3xl font-black text-white">
                       ${adminMetrics.totalServices > 0 ? (adminMetrics.totalRevenue / adminMetrics.totalServices).toFixed(2) : '0.00'}
                     </div>
-                    <div className="text-[10px] text-purple-400/60 mt-1">Promedio por mesa</div>
+                    <div className="text-[10px] text-purple-400/60 mt-1">Promedio por servicio</div>
                   </div>
 
                   <div className="bg-[#120e1d] border border-purple-950/80 p-5 rounded-2xl">
@@ -1063,10 +1064,10 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* OPERATORS MANAGEMENT */}
                 <div className="bg-[#120e1d] border border-purple-950/80 rounded-3xl p-6 space-y-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center border-b border-purple-950/80 pb-3">
                     <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
                       <Users className="w-5 h-5 text-purple-400" />
-                      <span>Cuentas de Operadores</span>
+                      <span>Cuentas de Operadores ({operators.length})</span>
                     </h3>
                   </div>
 
@@ -1077,25 +1078,25 @@ export default function App() {
                         <div key={op.id} className="bg-[#09090b] p-3.5 rounded-2xl border border-purple-950/80 flex justify-between items-center">
                           <div>
                             <p className="font-bold text-white text-xs">{op.name}</p>
-                            <p className="text-[10px] text-purple-400 font-mono">
+                            <p className="text-[10px] text-purple-400 font-mono mt-0.5">
                               Usuario: <span className="text-purple-200 font-bold">{op.username}</span> | Discoteca: {vName}
                             </p>
                           </div>
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
                             <div className="text-right font-mono text-xs text-purple-300 font-bold bg-purple-950/60 px-2.5 py-1 rounded-lg border border-purple-800/40">
                               PIN: {op.pin}
                             </div>
                             <button
                               onClick={() => setEditingUser({ type: 'operator', user: op })}
-                              className="p-1.5 text-purple-400 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-lg border border-purple-800/30 transition-all"
+                              className="p-2 text-purple-400 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-xl border border-purple-800/30 transition-all"
                               title="Editar Credenciales"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteOperator(op.id)}
-                              className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-lg border border-rose-800/30 transition-all"
-                              title="Eliminar Cuenta"
+                              className="p-2 text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-xl border border-rose-800/30 transition-all"
+                              title="Eliminar Operador por Defecto"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1103,6 +1104,10 @@ export default function App() {
                         </div>
                       );
                     })}
+
+                    {operators.length === 0 && (
+                      <p className="text-center py-6 text-purple-400/50 text-xs">No hay operadores registrados actualmente.</p>
+                    )}
                   </div>
 
                   <form onSubmit={e => {
@@ -1116,7 +1121,10 @@ export default function App() {
                     });
                     form.reset();
                   }} className="pt-4 border-t border-purple-950/80 space-y-3">
-                    <p className="text-xs font-extrabold text-purple-200">Crear Nuevo Operador</p>
+                    <p className="text-xs font-extrabold text-purple-200 flex items-center space-x-1.5">
+                      <UserPlus className="w-4 h-4 text-purple-400" />
+                      <span>Crear Nuevo Operador</span>
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       <input type="text" name="name" required placeholder="Nombre Completo" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white" />
                       <input type="text" name="username" required placeholder="Usuario" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
@@ -1127,7 +1135,7 @@ export default function App() {
                       </select>
                       <input type="password" name="pin" required placeholder="PIN de Acceso" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
                     </div>
-                    <button type="submit" className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all">
+                    <button type="submit" className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all shadow-md">
                       Registrar Operador
                     </button>
                   </form>
@@ -1135,10 +1143,10 @@ export default function App() {
 
                 {/* ADMINS MANAGEMENT */}
                 <div className="bg-[#120e1d] border border-purple-950/80 rounded-3xl p-6 space-y-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center border-b border-purple-950/80 pb-3">
                     <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
                       <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                      <span>Cuentas de Administradores</span>
+                      <span>Cuentas de Administradores ({admins.length})</span>
                     </h3>
                   </div>
 
@@ -1147,25 +1155,25 @@ export default function App() {
                       <div key={adm.id} className="bg-[#09090b] p-3.5 rounded-2xl border border-purple-950/80 flex justify-between items-center">
                         <div>
                           <p className="font-bold text-white text-xs">{adm.name}</p>
-                          <p className="text-[10px] text-purple-400 font-mono">
+                          <p className="text-[10px] text-purple-400 font-mono mt-0.5">
                             Usuario: <span className="text-purple-200 font-bold">{adm.username}</span>
                           </p>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <span className="text-[10px] text-purple-300 font-mono bg-purple-950/60 px-2 py-1 rounded-md border border-purple-800/40">
-                            ••••••••
-                          </span>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-right font-mono text-xs text-indigo-300 font-bold bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-800/40">
+                            {adm.password}
+                          </div>
                           <button
                             onClick={() => setEditingUser({ type: 'admin', user: adm })}
-                            className="p-1.5 text-purple-400 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-lg border border-purple-800/30 transition-all"
-                            title="Editar Credenciales"
+                            className="p-2 text-purple-400 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-xl border border-purple-800/30 transition-all"
+                            title="Editar Credenciales Admin"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           {admins.length > 1 && (
                             <button
                               onClick={() => handleDeleteAdmin(adm.id)}
-                              className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-lg border border-rose-800/30 transition-all"
+                              className="p-2 text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-xl border border-rose-800/30 transition-all"
                               title="Eliminar Administrador"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1186,13 +1194,16 @@ export default function App() {
                     });
                     form.reset();
                   }} className="pt-4 border-t border-purple-950/80 space-y-3">
-                    <p className="text-xs font-extrabold text-purple-200">Registrar Nuevo Administrador</p>
+                    <p className="text-xs font-extrabold text-purple-200 flex items-center space-x-1.5">
+                      <UserPlus className="w-4 h-4 text-indigo-400" />
+                      <span>Registrar Nuevo Administrador</span>
+                    </p>
                     <input type="text" name="name" required placeholder="Nombre Completo" className="w-full bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white" />
                     <div className="grid grid-cols-2 gap-2">
-                      <input type="text" name="username" required placeholder="Usuario" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
-                      <input type="password" name="password" required placeholder="Contraseña" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
+                      <input type="text" name="username" required placeholder="Usuario Admin" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
+                      <input type="password" name="password" required placeholder="Contraseña Admin" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
                     </div>
-                    <button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all">
+                    <button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all shadow-md">
                       Crear Administrador
                     </button>
                   </form>
