@@ -15,7 +15,9 @@ import {
   Lock,
   AlertCircle,
   Trash2,
-  Edit2
+  Edit2,
+  KeyRound,
+  UserCheck
 } from 'lucide-react';
 
 // Default Venues Setup
@@ -80,6 +82,7 @@ export default function App() {
 
   // Modals & Editing
   const [editingSale, setEditingSale] = useState(null);
+  const [editingUser, setEditingUser] = useState(null); // { type: 'admin'|'operator', user: obj }
   const [showNewVenueModal, setShowNewVenueModal] = useState(false);
 
   // Dynamic Sales & Shifts State
@@ -259,10 +262,41 @@ export default function App() {
     setOperators(prev => [...prev, { id, ...newOp }]);
   };
 
+  // Update Operator Credentials
+  const handleUpdateOperator = (updatedOp) => {
+    setOperators(prev => prev.map(op => op.id === updatedOp.id ? updatedOp : op));
+    setEditingUser(null);
+  };
+
+  // Delete Operator Account
+  const handleDeleteOperator = (opId) => {
+    setOperators(prev => prev.filter(op => op.id !== opId));
+  };
+
   // Create New Admin (Admin)
   const handleCreateAdmin = (newAdmin) => {
     const id = `adm_${Date.now()}`;
     setAdmins(prev => [...prev, { id, ...newAdmin }]);
+  };
+
+  // Update Admin Credentials
+  const handleUpdateAdmin = (updatedAdmin) => {
+    setAdmins(prev => prev.map(adm => adm.id === updatedAdmin.id ? updatedAdmin : adm));
+
+    // Update current logged session if updating own profile
+    if (currentUser && currentUser.id === updatedAdmin.id) {
+      setCurrentUser(prev => ({ ...prev, ...updatedAdmin }));
+    }
+    setEditingUser(null);
+  };
+
+  // Delete Admin Account
+  const handleDeleteAdmin = (admId) => {
+    if (admins.length <= 1) {
+      alert("No se puede eliminar el único administrador del sistema.");
+      return;
+    }
+    setAdmins(prev => prev.filter(adm => adm.id !== admId));
   };
 
   // Filtered Metrics Calculation (Admin)
@@ -735,7 +769,7 @@ export default function App() {
                   }`}
                 >
                   <Users className="w-4 h-4" />
-                  <span>Operadores & Claves</span>
+                  <span>Cuentas & Accesos</span>
                 </button>
               </div>
 
@@ -1024,11 +1058,17 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 4: OPERATOR & ADMIN ACCOUNTS */}
+            {/* TAB 4: OPERATOR & ADMIN ACCOUNTS MANAGEMENT */}
             {adminTab === 'operators' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* OPERATORS MANAGEMENT */}
                 <div className="bg-[#120e1d] border border-purple-950/80 rounded-3xl p-6 space-y-4">
-                  <h3 className="text-base font-extrabold text-white">Operadores de Locales</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
+                      <Users className="w-5 h-5 text-purple-400" />
+                      <span>Cuentas de Operadores</span>
+                    </h3>
+                  </div>
 
                   <div className="space-y-3">
                     {operators.map(op => {
@@ -1037,10 +1077,28 @@ export default function App() {
                         <div key={op.id} className="bg-[#09090b] p-3.5 rounded-2xl border border-purple-950/80 flex justify-between items-center">
                           <div>
                             <p className="font-bold text-white text-xs">{op.name}</p>
-                            <p className="text-[10px] text-purple-400 font-mono">Usuario: {op.username} | Discoteca: {vName}</p>
+                            <p className="text-[10px] text-purple-400 font-mono">
+                              Usuario: <span className="text-purple-200 font-bold">{op.username}</span> | Discoteca: {vName}
+                            </p>
                           </div>
-                          <div className="text-right font-mono text-xs text-purple-300 font-bold bg-purple-950/60 px-2.5 py-1 rounded-lg border border-purple-800/40">
-                            PIN: {op.pin}
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right font-mono text-xs text-purple-300 font-bold bg-purple-950/60 px-2.5 py-1 rounded-lg border border-purple-800/40">
+                              PIN: {op.pin}
+                            </div>
+                            <button
+                              onClick={() => setEditingUser({ type: 'operator', user: op })}
+                              className="p-1.5 text-purple-400 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-lg border border-purple-800/30 transition-all"
+                              title="Editar Credenciales"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOperator(op.id)}
+                              className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-lg border border-rose-800/30 transition-all"
+                              title="Eliminar Cuenta"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
                       );
@@ -1061,13 +1119,13 @@ export default function App() {
                     <p className="text-xs font-extrabold text-purple-200">Crear Nuevo Operador</p>
                     <div className="grid grid-cols-2 gap-2">
                       <input type="text" name="name" required placeholder="Nombre Completo" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white" />
-                      <input type="text" name="username" required placeholder="Usuario" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white" />
+                      <input type="text" name="username" required placeholder="Usuario" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <select name="venueId" required className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white">
                         {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                       </select>
-                      <input type="password" name="pin" required placeholder="PIN (Ej: 1234)" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
+                      <input type="password" name="pin" required placeholder="PIN de Acceso" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
                     </div>
                     <button type="submit" className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all">
                       Registrar Operador
@@ -1075,19 +1133,45 @@ export default function App() {
                   </form>
                 </div>
 
+                {/* ADMINS MANAGEMENT */}
                 <div className="bg-[#120e1d] border border-purple-950/80 rounded-3xl p-6 space-y-4">
-                  <h3 className="text-base font-extrabold text-white">Administradores del Sistema</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
+                      <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                      <span>Cuentas de Administradores</span>
+                    </h3>
+                  </div>
 
                   <div className="space-y-3">
                     {admins.map(adm => (
                       <div key={adm.id} className="bg-[#09090b] p-3.5 rounded-2xl border border-purple-950/80 flex justify-between items-center">
                         <div>
                           <p className="font-bold text-white text-xs">{adm.name}</p>
-                          <p className="text-[10px] text-purple-400 font-mono">Usuario: {adm.username}</p>
+                          <p className="text-[10px] text-purple-400 font-mono">
+                            Usuario: <span className="text-purple-200 font-bold">{adm.username}</span>
+                          </p>
                         </div>
-                        <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-950/40 px-2 py-1 rounded-md border border-emerald-900/60">
-                          Acceso Total
-                        </span>
+                        <div className="flex items-center space-x-3">
+                          <span className="text-[10px] text-purple-300 font-mono bg-purple-950/60 px-2 py-1 rounded-md border border-purple-800/40">
+                            ••••••••
+                          </span>
+                          <button
+                            onClick={() => setEditingUser({ type: 'admin', user: adm })}
+                            className="p-1.5 text-purple-400 hover:text-white bg-purple-950/40 hover:bg-purple-900/60 rounded-lg border border-purple-800/30 transition-all"
+                            title="Editar Credenciales"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          {admins.length > 1 && (
+                            <button
+                              onClick={() => handleDeleteAdmin(adm.id)}
+                              className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-lg border border-rose-800/30 transition-all"
+                              title="Eliminar Administrador"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1105,7 +1189,7 @@ export default function App() {
                     <p className="text-xs font-extrabold text-purple-200">Registrar Nuevo Administrador</p>
                     <input type="text" name="name" required placeholder="Nombre Completo" className="w-full bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white" />
                     <div className="grid grid-cols-2 gap-2">
-                      <input type="text" name="username" required placeholder="Usuario" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white" />
+                      <input type="text" name="username" required placeholder="Usuario" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
                       <input type="password" name="password" required placeholder="Contraseña" className="bg-[#09090b] border border-purple-900/50 rounded-xl p-2.5 text-xs text-white font-mono" />
                     </div>
                     <button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all">
@@ -1134,6 +1218,17 @@ export default function App() {
           sale={editingSale}
           onClose={() => setEditingSale(null)}
           onSubmit={handleUpdateSale}
+        />
+      )}
+
+      {/* MODAL: EDIT USER/ADMIN CREDENTIALS */}
+      {editingUser && (
+        <ModalEditUserCredentials
+          target={editingUser}
+          venues={venues}
+          onClose={() => setEditingUser(null)}
+          onSaveAdmin={handleUpdateAdmin}
+          onSaveOperator={handleUpdateOperator}
         />
       )}
     </div>
@@ -1275,6 +1370,119 @@ function ModalEditSale({ sale, onClose, onSubmit }) {
               className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-black shadow-lg"
             >
               Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Modal Component: Edit User or Admin Credentials
+function ModalEditUserCredentials({ target, venues, onClose, onSaveAdmin, onSaveOperator }) {
+  const isAdmin = target.type === 'admin';
+  const user = target.user;
+
+  const [name, setName] = useState(user.name || '');
+  const [username, setUsername] = useState(user.username || '');
+  const [passwordOrPin, setPasswordOrPin] = useState(isAdmin ? (user.password || '') : (user.pin || ''));
+  const [venueId, setVenueId] = useState(user.venueId || venues[0]?.id || '');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isAdmin) {
+      onSaveAdmin({
+        ...user,
+        name,
+        username,
+        password: passwordOrPin
+      });
+    } else {
+      onSaveOperator({
+        ...user,
+        name,
+        username,
+        pin: passwordOrPin,
+        venueId
+      });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-[#09090b]/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div className="bg-[#120e1d] border border-purple-950/90 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center space-x-2 mb-1">
+          <KeyRound className="w-5 h-5 text-purple-400" />
+          <h3 className="text-lg font-black text-white">
+            Modificar {isAdmin ? 'Administrador' : 'Operador'}
+          </h3>
+        </div>
+        <p className="text-xs text-purple-300/60 mb-4">Actualiza el usuario o la contraseña de acceso.</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-purple-200 font-bold mb-1">Nombre Completo</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full bg-[#09090b] border border-purple-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-purple-500 font-bold"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-200 font-bold mb-1">Nombre de Usuario</label>
+            <input
+              type="text"
+              required
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              className="w-full bg-[#09090b] border border-purple-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-purple-500 font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-200 font-bold mb-1">
+              {isAdmin ? 'Nueva Contraseña' : 'Nuevo PIN de Acceso'}
+            </label>
+            <input
+              type="text"
+              required
+              value={passwordOrPin}
+              onChange={e => setPasswordOrPin(e.target.value)}
+              className="w-full bg-[#09090b] border border-purple-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-purple-500 font-mono"
+            />
+          </div>
+
+          {!isAdmin && (
+            <div>
+              <label className="block text-purple-200 font-bold mb-1">Discoteca Asignada</label>
+              <select
+                value={venueId}
+                onChange={e => setVenueId(e.target.value)}
+                className="w-full bg-[#09090b] border border-purple-900/50 rounded-xl p-3 text-white focus:outline-none focus:border-purple-500 font-bold"
+              >
+                {venues.map(v => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 rounded-xl border border-purple-900/50 text-purple-300 font-bold"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-black shadow-lg"
+            >
+              Guardar Credenciales
             </button>
           </div>
         </form>
